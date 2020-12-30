@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en" data-framework="jquery">
+
+<head>
+    <meta charset="utf-8">
+    <title>jQuery • pancakeMVC</title>
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/index.css">
+    <link rel="stylesheet" href="css/app.css">
+</head>
+
+<body>
+    <section id="pancakeapp">
+        <header id="header">
+            <h1>pancakes</h1>
+            <input id="new-pancake" placeholder="What needs to be done?" autofocus>
+        </header>
+        <section id="main">
+            <input id="toggle-all" type="checkbox">
+            <label for="toggle-all">Mark all as complete</label>
+            <ul id="pancake-list"></ul>
+        </section>
+        <footer id="footer"></footer>
+    </section>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
