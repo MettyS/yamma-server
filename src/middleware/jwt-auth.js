@@ -1,4 +1,3 @@
-  
 const AuthService = require('../auth/auth-service');
 
 function requireAuth(req, res, next) {
@@ -15,24 +14,21 @@ function requireAuth(req, res, next) {
     // decode bearerToken into user information
     const payload = AuthService.verifyJwt(bearerToken);
     // try to find user in db
-    AuthService.getUserWithUsername(
-      req.app.get('db'),
-      payload.sub,
-    )
-      .then(user => {
+    AuthService.getUserWithUsername(req.app.get('db'), payload.sub)
+      .then((user) => {
         // if user doesn't exist reject req
         if (!user)
           return res.status(401).json({ error: 'Unauthorized request' });
 
-        // set a request variable to store user info 
+        // set a request variable to store user info
         // so routes/services dealing with this request can have access to it
         req.user = user;
         next();
       })
-      .catch(err => {
+      .catch((err) => {
         next(err);
-      })
-  } catch(error) {
+      });
+  } catch (error) {
     res.status(401).json({ error: 'Unauthorized request' });
   }
 }

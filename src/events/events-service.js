@@ -1,25 +1,18 @@
-
 const EventsService = {
   getEvents(db) {
-    return db('events')
-      .select('*');
+    return db('events').select('*');
   },
   addEvent(db, event) {
     return db('events')
       .insert(event)
       .returning('*')
-      .then( ([addedEvent]) => addedEvent);
+      .then(([addedEvent]) => addedEvent);
   },
   deleteEvent(db, id) {
-    return db('events')
-      .where({ id })
-      .delete();
+    return db('events').where({ id }).delete();
   },
   getEventById(db, event_id) {
-    return db('events')
-      .select('*')
-      .where({ id })
-      .first();
+    return db('events').select('*').where({ id }).first();
   },
   // TODO
   getEventsByCategory(db, categories) {
@@ -27,8 +20,7 @@ const EventsService = {
   },
   getEventsByDateRange(db, someRange) {
     /* IMPLEMENT ME */
-  }
-  
-  };
-  
-  module.exports = EventsService;
+  },
+};
+
+module.exports = EventsService;

@@ -14,7 +14,6 @@ const authRouter = require('./auth/auth-router');
 //const commentsRouter = require('./comments/comments-router');
 //const eventsRouter = require('./events/events-router');
 
-
 const app = express();
 
 const morganOption = NODE_ENV === 'production' ? 'tiny' : 'common';
@@ -29,7 +28,7 @@ app.use(helmet());
 
 app.use(express.static('public'));
 
-// ROUTERS 
+// ROUTERS
 app.use('/auth', authRouter);
 // TODO app.use('/users', usersRouter);
 // TODO app.use('/comments', commentsRouter);
