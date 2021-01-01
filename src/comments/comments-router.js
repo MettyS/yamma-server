@@ -1,32 +1,57 @@
 const express = require('express');
+const xss = require('xss');
+const { requireAuth } = require('../middleware/jwt-auth');
 const CommentsService = require('./comments-service');
 const commentsRouter = express.Router();
 const jsonParser = express.json();
-const xss = require('xss');
 
 // HELPER:
-const serializeComment = (comment) => {
-  /* IMPLEMENT ME */
+const serializeComment = (comment, eventId, userId) => {
+  if (!eventId || !userId)
+    return res
+      .status(400)
+      .json({ error: 'An event ID and user ID must be provided' });
+  if (!comment || !Object.keys(comment).length)
+    return res
+      .status(400)
+      .json({ error: 'A not empty comment object must be provided' });
+  if (!comment.content)
+    return res
+      .status(400)
+      .json({ error: 'Cannot submit a comment with no content' });
+  return {
+    userId: Number(userId),
+    eventId: Number(eventId),
+    content: xss(comment.content),
+  };
 };
 
 // NOTE: having a "/comments/" route isn't useful ATM. All comments are linked to a specific event
 //				Client should fetch comments after fetching events
 commentsRouter
   .route('/events/:eventId')
-	//get all comments for a given event by eventId => returns { comments: [...comments]}
-  .get( async (req, res, next) => {
+  //get all comments for a given event by event ID => returns { comments: [...comments]}
+	// TODO: implement query usage to enable pagination with service
+  .get(async (req, res, next) => {
     try {
-			const comments = await CommentsService.getCommentsByEventId(
-				req.app.get('db'),
-				req.params.eventId
-			);
-			res.json({ comments });
-		} catch (e) {
-			next(e);
-		}
+      const comments = await CommentsService.getCommentsByEventId(
+        req.app.get('db'),
+        req.params.eventId
+      );
+      res.json({ comments });
+    } catch (e) {
+      next(e);
+    }
   })
-  .post(jsonParser, (req, res, next) => {
-    /* IMPLEMENT ME */
+  .post(requireAuth, jsonParser, async (req, res, next) => {
+    try {
+      let { comment } = req.body;
+      comment = serializeComment(comment, req.params.eventId, req.user.id);
+      await CommentsService.addComment(req.app.get('db'), comment);
+      res.status(201).json({});
+    } catch (e) {
+      next(e);
+    }
   });
 
 // TODO /comments/:comment_id
@@ -39,9 +64,9 @@ commentsRouter
         if (!commentWithId)
           return res
             .status(404)
-            .json({ error: { message: `Comment does not exist` } });
+            .json({ error: `Comment does not exist` });
 
-        res.comment = commentWithId;
+        req.comment = commentWithId;
         next();
       })
       .catch(next);
