@@ -2,6 +2,13 @@ const CommentsService = {
   getComments(db) {
     return db('comments').select('*');
   },
+  getCommentsByEventId(db, event_id, page = 1) {
+    // TODO: implement pagination to save resources
+    return db('comments')
+      .select()
+      .where({ event_id })
+      .orderBy({ column: 'date_created', order: 'asc' });
+  },
   addComment(db, comment) {
     return db('comments')
       .insert(comment)
