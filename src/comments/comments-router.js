@@ -9,11 +9,21 @@ const serializeComment = (comment) => {
   /* IMPLEMENT ME */
 };
 
-// TODO /comments/
+// NOTE: having a "/comments/" route isn't useful ATM. All comments are linked to a specific event
+//				Client should fetch comments after fetching events
 commentsRouter
-  .route('/')
-  .get((req, res, next) => {
-    /* IMPLEMENT ME */
+  .route('/events/:eventId')
+	//get all comments for a given event by eventId => returns { comments: [...comments]}
+  .get( async (req, res, next) => {
+    try {
+			const comments = await CommentsService.getCommentsByEventId(
+				req.app.get('db'),
+				req.params.eventId
+			);
+			res.json({ comments });
+		} catch (e) {
+			next(e);
+		}
   })
   .post(jsonParser, (req, res, next) => {
     /* IMPLEMENT ME */
@@ -21,7 +31,7 @@ commentsRouter
 
 // TODO /comments/:comment_id
 commentsRouter
-  .route('/:comment_id')
+  .route('/id/:commentId')
   .all((req, res, next) => {
     const { comment_id } = req.params;
     CommentsService.getCommentById(req.app.get('db'), comment_id)
