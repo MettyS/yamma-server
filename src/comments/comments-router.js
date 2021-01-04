@@ -31,7 +31,7 @@ const serializeComment = (comment, eventId, userId) => {
 commentsRouter
   .route('/events/:eventId')
   //get all comments for a given event by event ID => returns { comments: [...comments]}
-	// TODO: implement query usage to enable pagination with service
+  // TODO: implement query usage to enable pagination with service
   .get(async (req, res, next) => {
     try {
       const comments = await CommentsService.getCommentsByEventId(
@@ -62,9 +62,7 @@ commentsRouter
     CommentsService.getCommentById(req.app.get('db'), comment_id)
       .then((commentWithId) => {
         if (!commentWithId)
-          return res
-            .status(404)
-            .json({ error: `Comment does not exist` });
+          return res.status(404).json({ error: `Comment does not exist` });
 
         req.comment = commentWithId;
         next();

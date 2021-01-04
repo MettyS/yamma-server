@@ -1,6 +1,8 @@
 const knex = require('knex');
 const app = require('../src/app');
 
+// THIS IS AN EXAMPLE TEST ONLY AND DOES NOT RUN
+
 describe.skip('Pancake API:', function () {
   let db;
   let pancakes = [
