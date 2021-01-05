@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE events (
 	id SERIAL PRIMARY KEY,
 	title VARCHAR (100) UNIQUE NOT NULL,
-	categories TEXT[] DEFAULT ARRAY[]::TEXT[],
+	categories TEXT NOT NULL,
 	description VARCHAR (2000),
   event_img VARCHAR NOT NULL,
   source_name VARCHAR NOT NULL,

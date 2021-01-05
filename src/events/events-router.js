@@ -10,11 +10,13 @@ const expectedKeys = ['title', 'categories', 'description'
 
 // validate that event obj has all required fields
 const validateKeys = (event) => {
-  let missingKeys = expectedKeys.map(key => {
+  let missingKeys = [];
+  expectedKeys.forEach(key => {
     if(!(event[key]))
-      return key;
+      missingKeys.push(key);
   });
   
+  console.log("THE MISSING KEYS ARRAY IS: ", missingKeys);
   return missingKeys.join(', ');
 }
 
@@ -43,8 +45,7 @@ const serializeEvent = (event) => {
   }
   catch (er) {
     console.log('error: ', er);
-    return res.status(400)
-      .json({ error: er});
+    return { error: er}
   }
 };
 
@@ -57,9 +58,21 @@ eventsRouter
   .post(jsonParser, (req, res, next) => {
     try {
       let { event } = req.body;
+      console.log('the incoming event is: ', event)
       event = serializeEvent(event);
-      await EventsService.addEvent(req.app.get('db'), event);
-      res.status(201).json({});
+
+      if(event.error)
+        return res.status(400).json({event})
+
+      EventsService.addEvent(req.app.get('db'), event)
+        .then(addedEvent => {
+          res.status(201).json({addedEvent});
+        })
+        .catch(er => {
+          console.log(er);
+          next(er);
+        });
+      
     } 
     catch (e) {
       next(e);
