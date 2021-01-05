@@ -64,18 +64,63 @@ eventsRouter
       if(event.error)
         return res.status(400).json({event})
 
+      
       EventsService.addEvent(req.app.get('db'), event)
         .then(addedEvent => {
           res.status(201).json({addedEvent});
         })
-        .catch(er => {
-          console.log(er);
-          next(er);
+
+
+        .catch(mainEr => {
+          
+          try {
+            if(mainEr.detail && mainEr.detail.slice(-15) === 'already exists.'){
+              console.log('********** DETECTED DUPLICATE VALUE INSERT ATTEMPT **********')
+              return EventsService.getEventByTitle(req.app.get('db'), event.title)
+                .then(existingEvent => {
+
+                  /*return res.status(400).json({error: {
+                    message: 'attempted to insert duplicate',
+                    oldEvent: existingEvent,
+                    badEvent: event
+                  }})*/
+
+                  if(!existingEvent.categories.includes(event.categories)) {
+                    existingEvent.categories = existingEvent.categories + ' ' + event.categories;
+                    EventsService.updateEventCategories(
+                      req.app.get('db')
+                      , existingEvent.id 
+                      , existingEvent
+                    )
+                    .then(rowsChanged => {
+                      return res.status(200).json({message: 'already exists, categories updated? yes'})
+                    })
+                    .catch(er => next(er))
+                  }
+                  else {
+                    return res.status(200).json({message: 'already exists, categories updated? no'})
+                  }
+                })
+                .catch(er => next(er))
+              
+            }
+            else {
+              return res.status(400).json({'error': {
+                mainEr,
+                badEvent: event
+              }})
+              
+            }
+          }
+          catch (er) {
+            next(mainEr);
+          }
+
+
         });
-      
     } 
-    catch (e) {
-      next(e);
+    catch (er) {
+      next(er);
     }
   });
 

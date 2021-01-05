@@ -11,8 +11,22 @@ const EventsService = {
   deleteEvent(db, id) {
     return db('events').where({ id }).delete();
   },
-  getEventById(db, event_id) {
+  getEventById(db, id) {
     return db('events').select('*').where({ id }).first();
+  },
+  getEventByTitle(db, title) {
+    return db('events').select('*').where({ title }).first();
+  },
+  updateEventCategories(db, event_id, event) {
+    return db('events')
+      .update(event, returning = true)
+      .where({
+          id: event_id
+      })
+      .returning('*')
+      .then(rows => {
+          return rows[0];
+      });
   },
   // TODO
   getEventsByCategory(db, categories) {
