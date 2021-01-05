@@ -1,5 +1,5 @@
 {
-  "name": "thinkful-node-postgres-boilerplate-app",
+  "name": "yamma-server",
   "version": "1.0.0",
   "description": "Node and PostgreSQL Boilerplate app",
   "main": "server.js",

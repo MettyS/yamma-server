@@ -4,9 +4,48 @@ const eventsRouter = express.Router();
 const jsonParser = express.json();
 const xss = require('xss');
 
-// HELPER:
+const expectedKeys = ['title', 'categories', 'description'
+                      , 'event_img', 'source_name', 'source_url'
+                      , 'source_img', 'date_published'];
+
+// validate that event obj has all required fields
+const validateKeys = (event) => {
+  let missingKeys = expectedKeys.map(key => {
+    if(!(event[key]))
+      return key;
+  });
+  
+  return missingKeys.join(', ');
+}
+
+// serialize and sanitize event
 const serializeEvent = (event) => {
-  /* IMPLEMENT ME */
+
+  try {
+    if (!event || !Object.keys(event).length)
+      throw new Error('A not empty comment object must be provided');
+    
+    const missingKeys = validateKeys(event);
+    if(missingKeys !== '')
+      throw new Error(`Fields ${missingKeys} must be provided`);
+
+    
+    return {
+      title: xss(event.title),
+      categories: xss(event.categories),
+      description: xss(event.description),
+      event_img: xss(event.event_img),
+      source_name: xss(event.source_name),
+      source_url: xss(event.source_url),
+      source_img: xss(event.source_img),
+      date_published: new Date(xss(event.date_published))
+    };
+  }
+  catch (er) {
+    console.log('error: ', er);
+    return res.status(400)
+      .json({ error: er});
+  }
 };
 
 // TODO /events/
@@ -16,7 +55,15 @@ eventsRouter
     /* IMPLEMENT ME */
   })
   .post(jsonParser, (req, res, next) => {
-    /* IMPLEMENT ME */
+    try {
+      let { event } = req.body;
+      event = serializeEvent(event);
+      await EventsService.addEvent(req.app.get('db'), event);
+      res.status(201).json({});
+    } 
+    catch (e) {
+      next(e);
+    }
   });
 
 // TODO /events/:event_id
