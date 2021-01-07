@@ -15,8 +15,6 @@ const validateKeys = (event) => {
     if(!(event[key]))
       missingKeys.push(key);
   });
-  
-  console.log("THE MISSING KEYS ARRAY IS: ", missingKeys);
   return missingKeys.join(', ');
 }
 
@@ -30,8 +28,6 @@ const serializeEvent = (event) => {
     const missingKeys = validateKeys(event);
     if(missingKeys !== '')
       throw new Error(`Fields ${missingKeys} must be provided`);
-
-    
     return {
       title: xss(event.title),
       categories: xss(event.categories),
@@ -49,11 +45,39 @@ const serializeEvent = (event) => {
   }
 };
 
+const serializeCategory = (category) => {
+  return xss(category)
+}
+
 // TODO /events/
 eventsRouter
   .route('/')
-  .get((req, res, next) => {
-    /* IMPLEMENT ME */
+  .get(jsonParser, (req, res, next) => {
+    const { category } = req.query;
+    console.log('incoming category requested is: ', category);
+    const sanitizedCategory = serializeCategory(category);
+    console.log('sanitizedCategory is: ', sanitizedCategory);
+    if(!sanitizedCategory || sanitizedCategory === 'US'){
+      EventsService.getEvents(req.app.get('db'))
+        .then( events => {
+          res.status(200).json({ events })
+        })
+        .catch( er => {
+          console.log('er at 66', er);
+          next(er);
+        })
+    }
+    else {
+      console.log('about to search for a specific category');
+      EventsService.getEventsByCategory(req.app.get('db'), sanitizedCategory)
+        .then( events => {
+          res.status(200).json({ events })
+        })
+        .catch( er => {
+          console.log('er at 76', er);
+          next(er);
+        })
+    }
   })
   .post(jsonParser, (req, res, next) => {
     try {
@@ -69,8 +93,6 @@ eventsRouter
         .then(addedEvent => {
           res.status(201).json({addedEvent});
         })
-
-
         .catch(mainEr => {
           
           try {
@@ -102,7 +124,6 @@ eventsRouter
                   }
                 })
                 .catch(er => next(er))
-              
             }
             else {
               return res.status(400).json({'error': {
@@ -115,8 +136,6 @@ eventsRouter
           catch (er) {
             next(mainEr);
           }
-
-
         });
     } 
     catch (er) {
@@ -142,7 +161,7 @@ eventsRouter
       .catch(next);
   })
   .get((req, res) => {
-    res.json(this.serializeEvent(res.event));
+    res.json(res.event);
   })
   .delete((req, res, next) => {
     /* IMPLEMENT ME */

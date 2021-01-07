@@ -29,8 +29,15 @@ const EventsService = {
       });
   },
   // TODO
-  getEventsByCategory(db, categories) {
-    /* IMPLEMENT ME */
+  getEventsByCategory(db, category) {
+    //  ~*
+    // `.*${category}.*`
+    const regexPattern = `.*${category}.*`;
+    // new RegExp('\\b('+words.join('|')+')\\b')
+    return db('events')
+      .select('*')
+      .where('categories', '~*', regexPattern)
+
   },
   getEventsByDateRange(db, someRange) {
     /* IMPLEMENT ME */
