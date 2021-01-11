@@ -9,10 +9,12 @@ const jsonParser = express.json();
 const serializeEvent = (event) => {
   const serialEvent = {
     title: xss(event.title),
-    categories: xss(event.categories),
+    categories: xss(event.categories) || null,
     description: xss(event.description),
     //valueOf gets milisecs since UNIX epoch. standard UTC uses seconds instead so divide by 1000 to get seconds
-    date_created: (new Date(event.date_created)).valueOf() / 1000 || (new Date()).valueOf() / 1000,
+    date_created:
+      new Date(event.date_created).valueOf() / 1000 ||
+      new Date().valueOf() / 1000,
   };
   for (const [key, val] of Object.entries(serialEvent)) {
     if (key === 'categories') continue;
@@ -28,8 +30,14 @@ const serializeEvent = (event) => {
 // TODO /events/
 eventsRouter
   .route('/')
-  .get((req, res, next) => {
-    /* IMPLEMENT ME */
+  .get(async (req, res, next) => {
+    try {
+      const page = Math.floor(parseInt(req.query.page)) || 0;
+      const events = await EventsService.getEvents(req.app.get('db'), page);
+      res.json(events);
+    } catch (e) {
+      next(e);
+    }
   })
   .post(requireWorkerAuth, jsonParser, async (req, res, next) => {
     try {
