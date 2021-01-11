@@ -1,10 +1,18 @@
 const EventsService = {
-  getEvents(db) {
-    return db('events').select('*');
+  getEvents(db, page = 1) {
+    // enable pagination. Limits results to "limit" (50) per page
+    const limit = 50,
+      offset = limit * (page - 1);
+    return db('events').select('*').offset(offset).limit(limit);
   },
   addEvent(db, event) {
     return db('events')
-      .insert(event)
+      .insert({
+        title: event.title,
+        categories: event.categories,
+        description: event.description,
+        date_created: db.raw(`to_timestamp(?)`,event.date_created),
+      })
       .returning('*')
       .then(([addedEvent]) => addedEvent);
   },

@@ -37,6 +37,7 @@
    MIGRATION_DB_USER=
    MIGRATION_DB_PASS=
    DATABASE_URL="postgresql://USERNAME@localhost/DATABASE_NAME"
+   WORKER_KEY=some-key
    ```
 9. Create the database tables:
    ```console
