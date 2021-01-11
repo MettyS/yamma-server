@@ -5,49 +5,142 @@ const requireWorkerAuth = require('../middleware/worker-auth');
 const eventsRouter = express.Router();
 const jsonParser = express.json();
 
-// HELPER:
+const expectedKeys = ['title', 'categories', 'description'
+                      , 'event_img', 'source_name', 'source_url'
+                      , 'source_img', 'date_published'];
+
+// validate that event obj has all required fields
+const validateKeys = (event) => {
+  let missingKeys = [];
+  expectedKeys.forEach(key => {
+    if(!(event[key]))
+      missingKeys.push(key);
+  });
+  return missingKeys.join(', ');
+}
+
+// serialize and sanitize event
 const serializeEvent = (event) => {
-  const serialEvent = {
-    title: xss(event.title),
-    categories: xss(event.categories) || null,
-    description: xss(event.description),
-    //valueOf gets milisecs since UNIX epoch. standard UTC uses seconds instead so divide by 1000 to get seconds
-    date_created:
-      new Date(event.date_created).valueOf() / 1000 ||
-      new Date().valueOf() / 1000,
-  };
-  for (const [key, val] of Object.entries(serialEvent)) {
-    if (key === 'categories') continue;
-    if (!val) {
-      const error = new Error(`Invalid ${key}`);
-      error.validationError = true;
-      throw error;
-    }
-    return serialEvent;
+
+  try {
+    if (!event || !Object.keys(event).length)
+      throw new Error('A not empty comment object must be provided');
+
+    const missingKeys = validateKeys(event);
+    if(missingKeys !== '')
+      throw new Error(`Fields ${missingKeys} must be provided`);
+    return {
+      title: xss(event.title),
+      categories: xss(event.categories),
+      description: xss(event.description),
+      event_img: xss(event.event_img),
+      source_name: xss(event.source_name),
+      source_url: xss(event.source_url),
+      source_img: xss(event.source_img),
+      date_published: new Date(xss(event.date_published))
+    };
+  }
+  catch (er) {
+    console.log('error: ', er);
+    return { error: er}
   }
 };
+
+const serializeCategory = (category) => {
+  return xss(category)
+}
 
 // TODO /events/
 eventsRouter
   .route('/')
-  .get(async (req, res, next) => {
-    try {
-      const page = Math.floor(parseInt(req.query.page)) || 0;
-      const events = await EventsService.getEvents(req.app.get('db'), page);
-      res.json(events);
-    } catch (e) {
-      next(e);
+  .get(jsonParser, (req, res, next) => {
+    const { category } = req.query;
+    console.log('incoming category requested is: ', category);
+    const sanitizedCategory = serializeCategory(category);
+    console.log('sanitizedCategory is: ', sanitizedCategory);
+    if(!sanitizedCategory || sanitizedCategory === 'US'){
+      EventsService.getEvents(req.app.get('db'))
+        .then( events => {
+          res.status(200).json({ events })
+        })
+        .catch( er => {
+          console.log('er at 66', er);
+          next(er);
+        })
+    }
+    else {
+      console.log('about to search for a specific category');
+      EventsService.getEventsByCategory(req.app.get('db'), sanitizedCategory)
+        .then( events => {
+          res.status(200).json({ events })
+        })
+        .catch( er => {
+          console.log('er at 76', er);
+          next(er);
+        })
     }
   })
-  .post(requireWorkerAuth, jsonParser, async (req, res, next) => {
+  .post(jsonParser, (req, res, next) => {
     try {
-      const event = serializeEvent(req.body);
-      await EventsService.addEvent(req.app.get('db'), event);
-      res.status(201).send('{}');
-    } catch (e) {
-      if (e.validationError)
-        return res.status(400).json({ message: e.message });
-      next(e);
+      let { event } = req.body;
+      console.log('the incoming event is: ', event)
+      event = serializeEvent(event);
+
+      if(event.error)
+        return res.status(400).json({event})
+
+
+      EventsService.addEvent(req.app.get('db'), event)
+        .then(addedEvent => {
+          res.status(201).json({addedEvent});
+        })
+        .catch(mainEr => {
+
+          try {
+            if(mainEr.detail && mainEr.detail.slice(-15) === 'already exists.'){
+              console.log('********** DETECTED DUPLICATE VALUE INSERT ATTEMPT **********')
+              return EventsService.getEventByTitle(req.app.get('db'), event.title)
+                .then(existingEvent => {
+
+                  /*return res.status(400).json({error: {
+                    message: 'attempted to insert duplicate',
+                    oldEvent: existingEvent,
+                    badEvent: event
+                  }})*/
+
+                  if(!existingEvent.categories.includes(event.categories)) {
+                    existingEvent.categories = existingEvent.categories + ' ' + event.categories;
+                    EventsService.updateEventCategories(
+                      req.app.get('db')
+                      , existingEvent.id
+                      , existingEvent
+                    )
+                    .then(rowsChanged => {
+                      return res.status(200).json({message: 'already exists, categories updated? yes'})
+                    })
+                    .catch(er => next(er))
+                  }
+                  else {
+                    return res.status(200).json({message: 'already exists, categories updated? no'})
+                  }
+                })
+                .catch(er => next(er))
+            }
+            else {
+              return res.status(400).json({'error': {
+                mainEr,
+                badEvent: event
+              }})
+
+            }
+          }
+          catch (er) {
+            next(mainEr);
+          }
+        });
+    }
+    catch (er) {
+      next(er);
     }
   });
 
@@ -69,7 +162,7 @@ eventsRouter
       .catch(next);
   })
   .get((req, res) => {
-    res.json(this.serializeEvent(res.event));
+    res.json(res.event);
   })
   .delete((req, res, next) => {
     /* IMPLEMENT ME */
