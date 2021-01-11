@@ -1,5 +1,5 @@
 {
-  "name": "thinkful-node-postgres-boilerplate-app",
+  "name": "yamma-server",
   "version": "1.0.0",
   "description": "Node and PostgreSQL Boilerplate app",
   "main": "server.js",
@@ -7,10 +7,11 @@
     "test": "mocha --require test/setup.js --watch",
     "dev": "nodemon src/server.js",
     "migrate": "postgrator --config postgrator-config.js",
-		"migrate:test": "env NODE_ENV=test && npm run migrate",
+    "migrate:test": "env NODE_ENV=test && npm run migrate",
     "start": "nodemon src/server.js",
     "predeploy": "npm audit",
-    "deploy": "git push heroku master"
+    "deploy": "git push heroku master",
+    "format": "prettier --write ."
   },
   "keywords": [],
   "author": "",
