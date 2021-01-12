@@ -19,7 +19,7 @@ const serializeComment = (comment, eventId, userId) => {
   if (!comment.content)
     return res
       .status(400)
-      .json({ message : 'Cannot submit a comment with no content' });
+      .json({ message: 'Cannot submit a comment with no content' });
   return {
     userId: Number(userId),
     eventId: Number(eventId),
@@ -31,7 +31,7 @@ const serializeComment = (comment, eventId, userId) => {
 //				Client should fetch comments after fetching events
 commentsRouter
   .route('/events/:eventId')
-    .all((req, res, next) => {
+  .all((req, res, next) => {
     const { eventId } = req.params;
     EventsService.getEventById(req.app.get('db'), eventId)
       .then((event) => {
@@ -49,8 +49,7 @@ commentsRouter
         req.app.get('db'),
         req.params.eventId
       );
-      if (!comments)
-      res.json({ comments });
+      if (!comments) res.json({ comments });
     } catch (e) {
       next(e);
     }

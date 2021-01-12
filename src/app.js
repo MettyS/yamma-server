@@ -13,7 +13,6 @@ const authRouter = require('./auth/auth-router');
 const usersRouter = require('./users/users-router');
 const commentsRouter = require('./comments/comments-router');
 const eventsRouter = require('./events/events-router');
-0
 
 const app = express();
 
