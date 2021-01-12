@@ -1,144 +1,156 @@
 const express = require('express');
+const xss = require('xss');
 const EventsService = require('./events-service');
+const requireWorkerAuth = require('../middleware/worker-auth');
 const eventsRouter = express.Router();
 const jsonParser = express.json();
-const xss = require('xss');
 
-const expectedKeys = ['title', 'categories', 'description'
-                      , 'event_img', 'source_name', 'source_url'
-                      , 'source_img', 'date_published'];
+const expectedKeys = [
+  'title',
+  'categories',
+  'description',
+  'event_img',
+  'source_name',
+  'source_url',
+  'source_img',
+  'date_published',
+];
+
+class MissingKeyError extends Error {
+  constructor(message) {
+    super(message);
+    this.missingKeyError = true;
+  }
+}
 
 // validate that event obj has all required fields
 const validateKeys = (event) => {
   let missingKeys = [];
-  expectedKeys.forEach(key => {
-    if(!(event[key]))
-      missingKeys.push(key);
-  });
-  return missingKeys.join(', ');
-}
+  for (let key of expectedKeys) {
+    // skips check on categories
+    if (key === 'categories') continue;
+    if (!event[key])
+      throw new MissingKeyError(`Invalid event. "${key}" key is missing.`);
+    //   expectedKeys.forEach((key) => {
+    //     if (!event[key]) missingKeys.push(key);
+    //   });
+    //   return missingKeys.join(', ');
+  }
+};
 
 // serialize and sanitize event
 const serializeEvent = (event) => {
-
   try {
     if (!event || !Object.keys(event).length)
-      throw new Error('A not empty comment object must be provided');
-    
-    const missingKeys = validateKeys(event);
-    if(missingKeys !== '')
-      throw new Error(`Fields ${missingKeys} must be provided`);
+      throw new MissingKeyError('A not empty comment object must be provided');
+
+    validateKeys(event);
+    // QUESTION: if provided an invalid date, what to do? Rn, 500 will return due to knex fail
     return {
       title: xss(event.title),
-      categories: xss(event.categories),
+      categories: xss(event.categories) || '',
       description: xss(event.description),
       event_img: xss(event.event_img),
       source_name: xss(event.source_name),
       source_url: xss(event.source_url),
       source_img: xss(event.source_img),
-      date_published: new Date(xss(event.date_published))
+      date_published: new Date(xss(event.date_published)),
     };
-  }
-  catch (er) {
-    console.log('error: ', er);
-    return { error: er}
+  } catch (er) {
+    throw er;
   }
 };
 
 const serializeCategory = (category) => {
-  return xss(category)
-}
+  return xss(category);
+};
 
 // TODO /events/
 eventsRouter
   .route('/')
   .get(jsonParser, (req, res, next) => {
-    const { category } = req.query;
+    const { category } = req.query,
+      page = Number(req.query.page) || 0;
     console.log('incoming category requested is: ', category);
     const sanitizedCategory = serializeCategory(category);
     console.log('sanitizedCategory is: ', sanitizedCategory);
-    if(!sanitizedCategory || sanitizedCategory === 'US'){
-      EventsService.getEvents(req.app.get('db'))
-        .then( events => {
-          res.status(200).json({ events })
+    if (!sanitizedCategory || sanitizedCategory === 'US') {
+      EventsService.getEvents(req.app.get('db'), page)
+        .then((events) => {
+          res.status(200).json({ events });
         })
-        .catch( er => {
+        .catch((er) => {
           console.log('er at 66', er);
           next(er);
-        })
-    }
-    else {
+        });
+    } else {
       console.log('about to search for a specific category');
       EventsService.getEventsByCategory(req.app.get('db'), sanitizedCategory)
-        .then( events => {
-          res.status(200).json({ events })
+        .then((events) => {
+          res.status(200).json({ events });
         })
-        .catch( er => {
+        .catch((er) => {
           console.log('er at 76', er);
           next(er);
-        })
+        });
     }
   })
-  .post(jsonParser, (req, res, next) => {
+  .post(requireWorkerAuth, jsonParser, (req, res, next) => {
     try {
-      let { event } = req.body;
-      console.log('the incoming event is: ', event)
+      let event = req.body;
+      console.log('the incoming event is: ', event);
+      // serializeEvent will throw a MissingKeyError handled in catch block
       event = serializeEvent(event);
 
-      if(event.error)
-        return res.status(400).json({event})
-
-      
       EventsService.addEvent(req.app.get('db'), event)
-        .then(addedEvent => {
-          res.status(201).json({addedEvent});
+        .then((addedEvent) => {
+          res.status(201).json({ addedEvent });
         })
-        .catch(mainEr => {
-          
+        .catch((mainEr) => {
           try {
-            if(mainEr.detail && mainEr.detail.slice(-15) === 'already exists.'){
-              console.log('********** DETECTED DUPLICATE VALUE INSERT ATTEMPT **********')
-              return EventsService.getEventByTitle(req.app.get('db'), event.title)
-                .then(existingEvent => {
-
-                  /*return res.status(400).json({error: {
-                    message: 'attempted to insert duplicate',
-                    oldEvent: existingEvent,
-                    badEvent: event
-                  }})*/
-
-                  if(!existingEvent.categories.includes(event.categories)) {
-                    existingEvent.categories = existingEvent.categories + ' ' + event.categories;
+            if (
+              mainEr.detail &&
+              mainEr.detail.slice(-15) === 'already exists.'
+            ) {
+              console.log(
+                '********** DETECTED DUPLICATE VALUE INSERT ATTEMPT **********'
+              );
+              return EventsService.getEventByTitle(
+                req.app.get('db'),
+                event.title
+              )
+                .then((existingEvent) => {
+                  if (!existingEvent.categories.includes(event.categories)) {
+                    existingEvent.categories =
+                      existingEvent.categories + ' ' + event.categories;
                     EventsService.updateEventCategories(
-                      req.app.get('db')
-                      , existingEvent.id 
-                      , existingEvent
+                      req.app.get('db'),
+                      existingEvent.id,
+                      existingEvent
                     )
-                    .then(rowsChanged => {
-                      return res.status(200).json({message: 'already exists, categories updated? yes'})
-                    })
-                    .catch(er => next(er))
-                  }
-                  else {
-                    return res.status(200).json({message: 'already exists, categories updated? no'})
+                      .then((rowsChanged) => {
+                        return res.status(200).json({
+                          message: 'already exists, categories updated? yes',
+                        });
+                      })
+                      .catch((er) => next(er));
+                  } else {
+                    return res.status(200).json({
+                      message: 'already exists, categories updated? no',
+                    });
                   }
                 })
-                .catch(er => next(er))
+                .catch((er) => next(er));
+            } else {
+              throw mainEr;
             }
-            else {
-              return res.status(400).json({'error': {
-                mainEr,
-                badEvent: event
-              }})
-              
-            }
-          }
-          catch (er) {
+          } catch (er) {
             next(mainEr);
           }
         });
-    } 
-    catch (er) {
+    } catch (er) {
+      if (er.missingKeyError)
+        return res.status(400).json({ message: er.message });
       next(er);
     }
   });
