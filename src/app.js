@@ -11,7 +11,7 @@ const errorHandler = require('./middleware/error-handler');
 // ROUTERS
 const authRouter = require('./auth/auth-router');
 const usersRouter = require('./users/users-router');
-//const commentsRouter = require('./comments/comments-router');
+const commentsRouter = require('./comments/comments-router');
 const eventsRouter = require('./events/events-router');
 0
 
@@ -32,7 +32,7 @@ app.use(express.static('public'));
 // ROUTERS
 app.use('/auth', authRouter);
 app.use('/users', usersRouter);
-// TODO app.use('/comments', commentsRouter);
+app.use('/comments', commentsRouter);
 app.use('/events', eventsRouter);
 
 // ERROR HANDLER
