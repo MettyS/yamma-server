@@ -11,7 +11,11 @@ const EventsService = {
         title: event.title,
         categories: event.categories,
         description: event.description,
-        date_created: db.raw(`to_timestamp(?)`, event.date_created),
+        event_img: event.event_img,
+        source_name: event.source_name,
+        source_url: event.source_url,
+        source_img: event.source_img,
+        date_published: event.date_published,
       })
       .returning('*')
       .then(([addedEvent]) => addedEvent);
@@ -27,13 +31,13 @@ const EventsService = {
   },
   updateEventCategories(db, event_id, event) {
     return db('events')
-      .update(event, returning = true)
+      .update(event, (returning = true))
       .where({
-          id: event_id
+        id: event_id,
       })
       .returning('*')
-      .then(rows => {
-          return rows[0];
+      .then((rows) => {
+        return rows[0];
       });
   },
   // TODO
@@ -42,10 +46,7 @@ const EventsService = {
     // `.*${category}.*`
     const regexPattern = `.*${category}.*`;
     // new RegExp('\\b('+words.join('|')+')\\b')
-    return db('events')
-      .select('*')
-      .where('categories', '~*', regexPattern)
-
+    return db('events').select('*').where('categories', '~*', regexPattern);
   },
   getEventsByDateRange(db, someRange) {
     /* IMPLEMENT ME */

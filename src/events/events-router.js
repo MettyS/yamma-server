@@ -16,27 +16,39 @@ const expectedKeys = [
   'date_published',
 ];
 
+class MissingKeyError extends Error {
+  constructor(message) {
+    super(message);
+    this.missingKeyError = true;
+  }
+}
+
 // validate that event obj has all required fields
 const validateKeys = (event) => {
   let missingKeys = [];
-  expectedKeys.forEach((key) => {
-    if (!event[key]) missingKeys.push(key);
-  });
-  return missingKeys.join(', ');
+  for (let key of expectedKeys) {
+    // skips check on categories
+    if (key === 'categories') continue;
+    if (!event[key])
+      throw new MissingKeyError(`Invalid event. "${key}" key is missing.`);
+    //   expectedKeys.forEach((key) => {
+    //     if (!event[key]) missingKeys.push(key);
+    //   });
+    //   return missingKeys.join(', ');
+  }
 };
 
 // serialize and sanitize event
 const serializeEvent = (event) => {
   try {
     if (!event || !Object.keys(event).length)
-      throw new Error('A not empty comment object must be provided');
+      throw new MissingKeyError('A not empty comment object must be provided');
 
-    const missingKeys = validateKeys(event);
-    if (missingKeys !== '')
-      throw new Error(`Fields ${missingKeys} must be provided`);
+    validateKeys(event);
+    // QUESTION: if provided an invalid date, what to do? Rn, 500 will return due to knex fail
     return {
       title: xss(event.title),
-      categories: xss(event.categories),
+      categories: xss(event.categories) || '',
       description: xss(event.description),
       event_img: xss(event.event_img),
       source_name: xss(event.source_name),
@@ -45,8 +57,7 @@ const serializeEvent = (event) => {
       date_published: new Date(xss(event.date_published)),
     };
   } catch (er) {
-    console.log('error: ', er);
-    return { error: er };
+    throw er;
   }
 };
 
@@ -86,11 +97,10 @@ eventsRouter
   })
   .post(requireWorkerAuth, jsonParser, (req, res, next) => {
     try {
-      let { event } = req.body;
+      let event = req.body;
       console.log('the incoming event is: ', event);
+      // serializeEvent will throw a MissingKeyError handled in catch block
       event = serializeEvent(event);
-
-      if (event.error) return res.status(400).json({ event });
 
       EventsService.addEvent(req.app.get('db'), event)
         .then((addedEvent) => {
@@ -110,12 +120,6 @@ eventsRouter
                 event.title
               )
                 .then((existingEvent) => {
-                  /*return res.status(400).json({error: {
-                    message: 'attempted to insert duplicate',
-                    oldEvent: existingEvent,
-                    badEvent: event
-                  }})*/
-
                   if (!existingEvent.categories.includes(event.categories)) {
                     existingEvent.categories =
                       existingEvent.categories + ' ' + event.categories;
@@ -138,18 +142,15 @@ eventsRouter
                 })
                 .catch((er) => next(er));
             } else {
-              return res.status(400).json({
-                error: {
-                  mainEr,
-                  badEvent: event,
-                },
-              });
+              throw mainEr;
             }
           } catch (er) {
             next(mainEr);
           }
         });
     } catch (er) {
+      if (er.missingKeyError)
+        return res.status(400).json({ message: er.message });
       next(er);
     }
   });
