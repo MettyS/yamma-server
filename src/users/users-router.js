@@ -13,7 +13,7 @@ const serializeUser = (user) => {
     id: user.id || null,
     username: xss(user.username),
     email: xss(user.email),
-    date_created: user.date_created || null,
+    date_created: new Date(xss(user.date_created)) || null,
   };
 };
 
