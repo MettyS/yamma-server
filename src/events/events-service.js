@@ -6,6 +6,7 @@ const EventsService = {
     return db('events').select('*').offset(offset).limit(limit);
   },
   addEvent(db, event) {
+    console.log('----------------------->   inserting event!');
     return db('events')
       .insert({
         title: event.title,
