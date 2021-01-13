@@ -49,7 +49,7 @@ commentsRouter
         req.app.get('db'),
         req.params.eventId
       );
-      if (!comments) res.json({ comments });
+			res.json({ comments });
     } catch (e) {
       next(e);
     }
