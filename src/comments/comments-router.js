@@ -9,20 +9,14 @@ const jsonParser = express.json();
 // HELPER:
 const serializeComment = (comment, eventId, userId) => {
   if (!eventId || !userId)
-    return res
-      .status(400)
-      .json({ message: 'An event ID and user ID must be provided' });
+    return { message: 'An event ID and user ID must be provided' };
   if (!comment || !Object.keys(comment).length)
-    return res
-      .status(400)
-      .json({ message: 'A not empty comment object must be provided' });
+    return { message: 'A not empty comment object must be provided' };
   if (!comment.content)
-    return res
-      .status(400)
-      .json({ message: 'Cannot submit a comment with no content' });
+    return { message: 'Cannot submit a comment with no content' };
   return {
-    userId: Number(userId),
-    eventId: Number(eventId),
+    user_id: Number(userId),
+    event_id: Number(eventId),
     content: xss(comment.content),
   };
 };
@@ -51,6 +45,7 @@ commentsRouter
       );
 			res.json({ comments });
     } catch (e) {
+      res.status(400).json({error: e })
       next(e);
     }
   })
@@ -58,6 +53,13 @@ commentsRouter
     try {
       let { comment } = req.body;
       comment = serializeComment(comment, req.params.eventId, req.user.id);
+
+      if(comment.message) {
+        return res
+        .status(400)
+        .json( comment )
+      }
+
       await CommentsService.addComment(req.app.get('db'), comment);
       res.status(201).json({});
     } catch (e) {

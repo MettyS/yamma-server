@@ -7,7 +7,7 @@ const CommentsService = {
     return db('comments')
       .select()
       .where({ event_id })
-      .orderBy({ column: 'date_created', order: 'asc' });
+      .orderBy('date_created', db.raw('asc') );
   },
   addComment(db, comment) {
     return db('comments')
