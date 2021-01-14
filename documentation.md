@@ -41,13 +41,13 @@
    ```
 9. Create the database tables:
    ```console
-   npm run migrate -- 1
+   npm run migrate -- 3
    ```
 10. Start the tests:
     ```console
     npm t
     ```
-11. You should see output from 10 integration tests, all passing.
+11. Tests have not yet been implemented
 
 ## Local Node scripts
 

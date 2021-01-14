@@ -19,33 +19,34 @@ const expectedKeys = [
 class MissingKeyError extends Error {
   constructor(message) {
     super(message);
-    this.missingKeyError = true;
   }
 }
 
 // validate that event obj has all required fields
 const validateKeys = (event) => {
-  let missingKeys = [];
-  for (let key of expectedKeys) {
+  
+  expectedKeys.forEach(key => {
     // skips check on categories
-    if (key === 'categories') continue;
-    if (!event[key])
+    if (key === 'categories') return;
+
+    if (!typeof(event[key]) || typeof(event[key]) === 'undefined') {
+      console.log('missing key error! throwing error now');
       throw new MissingKeyError(`Invalid event. "${key}" key is missing.`);
-    //   expectedKeys.forEach((key) => {
-    //     if (!event[key]) missingKeys.push(key);
-    //   });
-    //   return missingKeys.join(', ');
-  }
+    }
+  })
+
 };
 
 // serialize and sanitize event
 const serializeEvent = (event) => {
   try {
-    if (!event || !Object.keys(event).length)
-      throw new MissingKeyError('A not empty comment object must be provided');
+    if (!event || !Object.keys(event).length) {
+      throw new MissingKeyError('A not empty event object must be provided');
+    }
 
     validateKeys(event);
     // QUESTION: if provided an invalid date, what to do? Rn, 500 will return due to knex fail
+
     return {
       title: xss(event.title),
       categories: xss(event.categories) || '',
@@ -97,12 +98,11 @@ eventsRouter
   })
   .post(requireWorkerAuth, jsonParser, (req, res, next) => {
     try {
-      let event = req.body;
-      console.log('the incoming event is: ', event);
-      // serializeEvent will throw a MissingKeyError handled in catch block
-      event = serializeEvent(event);
+      const { event } = req.body;
 
-      EventsService.addEvent(req.app.get('db'), event)
+      // serializeEvent will throw a MissingKeyError handled in catch block
+      const serializedEvent = serializeEvent(event);
+      EventsService.addEvent(req.app.get('db'), serializedEvent)
         .then((addedEvent) => {
           res.status(201).json({ addedEvent });
         })
@@ -117,12 +117,12 @@ eventsRouter
               );
               return EventsService.getEventByTitle(
                 req.app.get('db'),
-                event.title
+                serializedEvent.title
               )
                 .then((existingEvent) => {
-                  if (!existingEvent.categories.includes(event.categories)) {
+                  if (!existingEvent.categories.includes(serializedEvent.categories)) {
                     existingEvent.categories =
-                      existingEvent.categories + ' ' + event.categories;
+                      existingEvent.categories + ' ' + serializedEvent.categories;
                     EventsService.updateEventCategories(
                       req.app.get('db'),
                       existingEvent.id,
@@ -149,8 +149,8 @@ eventsRouter
           }
         });
     } catch (er) {
-      if (er.missingKeyError)
-        return res.status(400).json({ message: er.message });
+      if (er instanceof MissingKeyError)
+        return res.status(400).json({ error: {message: er.message }});
       next(er);
     }
   });

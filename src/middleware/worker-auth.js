@@ -1,4 +1,4 @@
-const AuthService = require('../auth/auth-service');
+//const AuthService = require('../auth/auth-service');
 
 function requireWorkerAuth(req, res, next) {
   // get the value of the 'Authorization' key in req headers
