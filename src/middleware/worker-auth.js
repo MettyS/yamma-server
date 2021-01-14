@@ -12,10 +12,10 @@ function requireWorkerAuth(req, res, next) {
   }
   try {
     // 418 => I'm a teapot
-    if (bearerToken !== process.env.WORKER_KEY) return res.status(418).end();
+    if (bearerToken !== process.env.WORKER_KEY) return res.status(404).end();
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Unauthorized request' });
+    res.status(404).end();
   }
 }
 
