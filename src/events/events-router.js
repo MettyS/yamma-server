@@ -77,7 +77,8 @@ eventsRouter
     if (!sanitizedCategory || sanitizedCategory === 'US') {
       EventsService.getEvents(req.app.get('db'), page)
         .then((events) => {
-          res.status(200).json({ events });
+					//events is already an array. No need to wrap it in an object
+          res.status(200).json(events);
         })
         .catch((er) => {
           console.log('er at 66', er);
