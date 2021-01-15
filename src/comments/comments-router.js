@@ -43,7 +43,7 @@ commentsRouter
         req.app.get('db'),
         req.params.eventId
       );
-      res.status(200).json({ comments });
+			res.json({ comments });
     } catch (e) {
       res.status(400).json({error: e })
       next(e);
