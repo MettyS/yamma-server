@@ -75,13 +75,13 @@ eventsRouter
     console.log('incoming category requested is: ', category);
     const sanitizedCategory = serializeCategory(category);
     console.log('sanitizedCategory is: ', sanitizedCategory);
-    if (!sanitizedCategory || sanitizedCategory === 'US') {
+    if (!sanitizedCategory) {
       EventsService.getEvents(req.app.get('db'), page)
         .then((events) => {
           res.status(200).json({ events });
         })
         .catch((er) => {
-          console.log('er at 66', er);
+          console.log('er at 84', er);
           next(er);
         });
     } else {
