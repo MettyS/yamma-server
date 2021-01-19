@@ -7,8 +7,8 @@ const commentsRouter = express.Router();
 const jsonParser = express.json();
 
 // HELPER:
-const serializeComment = (comment, eventId, userId) => {
-  if (!eventId || !userId)
+const serializeComment = (comment, eventId, userId, username) => {
+  if (!eventId || !userId || !username)
     return { message: 'An event ID and user ID must be provided' };
   if (!comment || !Object.keys(comment).length)
     return { message: 'A not empty comment object must be provided' };
@@ -18,6 +18,7 @@ const serializeComment = (comment, eventId, userId) => {
     user_id: Number(userId),
     event_id: Number(eventId),
     content: xss(comment.content),
+    username: xss(username)
   };
 };
 
@@ -52,7 +53,7 @@ commentsRouter
   .post(requireAuth, jsonParser, async (req, res, next) => {
     try {
       let { comment } = req.body;
-      comment = serializeComment(comment, req.params.eventId, req.user.id);
+      comment = serializeComment(comment, req.params.eventId, req.user.id, req.user.username);
 
       if(comment.message) {
         return res
