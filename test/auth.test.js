@@ -1,5 +1,6 @@
 const knex = require('knex');
 const app = require('../src/app');
+const { resetIdSeq } = require('./test-helpers');
 //users fixtures already include a hashed password to speed up test execution time
 const usersFixture = require('./fixtures/users.fixture');
 const usersToInsert = usersFixture.existingUsers.map((u) => ({
@@ -19,7 +20,10 @@ describe('authentication endpoints', function () {
     app.set('db', db);
   });
 
-  before('cleanup', () => db('users').del());
+  before('cleanup', async () => {
+    await db('users').del();
+    await resetIdSeq(db, 'users_id_seq');
+  });
   before('insert previous users', () => db('users').insert(usersToInsert));
   describe(`/auth`, () => {
     context(`POST to login`, () => {
