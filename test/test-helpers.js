@@ -1,4 +1,4 @@
 module.exports = {
-  resetIdSeq: (db, tableName) => db.raw(`select serval('?_id_seq', 1, false)`, tableName),
+  resetIdSeq: (db, seqName) => db.raw(`select setval( ?, 1, false)`, seqName),
 
 }
