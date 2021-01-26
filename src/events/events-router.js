@@ -24,7 +24,7 @@ class MissingKeyError extends Error {
 
 // validate that event obj has all required fields
 const validateKeys = (event) => {
-  
+
   expectedKeys.forEach(key => {
     // skips check on categories
     if (key === 'categories') return;
@@ -72,26 +72,24 @@ eventsRouter
   .get(jsonParser, (req, res, next) => {
     const { category } = req.query,
       page = Number(req.query.page) || 0;
-    console.log('incoming category requested is: ', category);
+    // console.log('incoming category requested is: ', category);
     const sanitizedCategory = serializeCategory(category);
-    console.log('sanitizedCategory is: ', sanitizedCategory);
+    // console.log('sanitizedCategory is: ', sanitizedCategory);
     if (!sanitizedCategory) {
       EventsService.getEvents(req.app.get('db'), page)
         .then((events) => {
           res.status(200).json({ events });
         })
         .catch((er) => {
-          console.log('er at 84', er);
           next(er);
         });
     } else {
-      console.log('about to search for a specific category');
+      // console.log('about to search for a specific category');
       EventsService.getEventsByCategory(req.app.get('db'), sanitizedCategory)
         .then((events) => {
           res.status(200).json({ events });
         })
         .catch((er) => {
-          console.log('er at 76', er);
           next(er);
         });
     }

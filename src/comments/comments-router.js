@@ -61,8 +61,8 @@ commentsRouter
         .json( comment )
       }
 
-      await CommentsService.addComment(req.app.get('db'), comment);
-      res.status(201).json({});
+      const newComment = await CommentsService.addComment(req.app.get('db'), comment);
+      res.status(201).json(newComment);
     } catch (e) {
       next(e);
     }
