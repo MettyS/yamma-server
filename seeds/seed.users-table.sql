@@ -1,4 +1,5 @@
-TRUNCATE TABLE users CASCADE;
+DELETE FROM users;
+SELECT setval('users_id_seq', 1, false);
 INSERT INTO users (username, password, email)
 VALUES
 -- password is "pass"
