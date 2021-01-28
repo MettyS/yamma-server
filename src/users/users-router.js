@@ -1,11 +1,17 @@
 const express = require('express');
 const path = require('path');
+
+// middleware
 const xss = require('xss');
+const jsonParser = express.json();
+
+// service objects
 const UsersService = require('./users-service');
 const AuthService = require('../auth/auth-service');
 
+// initialize usersRouter
 const usersRouter = express.Router();
-const jsonParser = express.json();
+
 
 // HELPER:
 const serializeUser = (user) => {
@@ -17,7 +23,8 @@ const serializeUser = (user) => {
   };
 };
 
-// TODO /users/
+/* usersRouter */
+// ROUTE /users/
 usersRouter
   .route('/')
   .get((req, res, next) => {
@@ -28,12 +35,15 @@ usersRouter
     sign up endpoint
       returns a valid jwt as { authToken: "jwtString" }
     */
+
+    // check if all expected fields exist
     for (const field of ['username', 'password', 'email'])
       if (!req.body[field])
         return res.status(400).json({
           error: `Missing '${field}' in request body`,
         });
     try {
+      // serialize and sanitize user
       const user = serializeUser(req.body);
       user.password = req.body.password;
       // validate syntax
@@ -53,6 +63,7 @@ usersRouter
       );
       const payload = { id: addedUser.id };
       
+      // create and return authtoken
       return res.status(201).json({
         authToken: AuthService.createJwt(addedUser.username, payload),
       });
@@ -63,7 +74,7 @@ usersRouter
     }
   });
 
-// TODO /users/:user_id
+// ROUTE /users/:user_id
 usersRouter
   .route('/:user_id')
   .all((req, res, next) => {

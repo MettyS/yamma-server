@@ -21,27 +21,37 @@ class ValidationError extends Error {
 }
 
 const UsersService = {
+  // get all users
   getUsers(db) {
     return db('users').select('*');
   },
+   // get user with name
+   getUsersByName(db, name) {
+    return db('users').select('*').where('username', name).first();
+  },
+  // get user with id
+  getUserById(db, userId) {
+    return db('users').select('*').where('id', userId).first();
+  },
+  // get user with email
+  getUsersByEmail(db, email) {
+    return db('users').select('*').where({ email }).first();
+  },
+  // add a user
   addUser(db, user) {
     return db('users')
       .insert({ username: user.username, password: user.password, email: user.email })
       .returning('*')
       .then(([addedUser]) => addedUser);
   },
+  /* NOT IN USE */
+  // delete a user
   deleteUser(db, id) {
     return db('users').where({ id }).delete();
   },
-  getUsersByName(db, name) {
-    return db('users').select('*').where('username', name).first();
-  },
-  getUserById(db, userId) {
-    return db('users').select('*').where('id', userId).first();
-  },
-  getUsersByEmail(db, email) {
-    return db('users').select('*').where({ email }).first();
-  },
+ 
+  /* validation helpers */
+  // email and username input validation
   validateEmailAndUsernameSyntax(email, username) {
     const emailPatt = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     if (!emailPatt.test(email))
@@ -52,7 +62,7 @@ const UsersService = {
     if (username.match(usernamePatt) || username.match(usernamePatt2))
       throw new ValidationError('username', 'Invalid username');
   },
-  // must be unique
+  // validate email and username are unique
   async validateEmailAndUsername(db, email, username) {
     try {
       let user = await this.getUsersByEmail(db, email);
@@ -64,6 +74,7 @@ const UsersService = {
       throw e;
     }
   },
+  // validate password meets requirements
   validatePassword(password) {
     // at least 8 chars,
     // at least one alpha and one special character
@@ -80,6 +91,7 @@ const UsersService = {
         'Password must contain at least one special character, one number, and one capital letter, and must be at least 8 characters long.'
       );
   },
+  // encrypt password
   hashPassword(password) {
     return bcrypt.hash(password, 12);
   },

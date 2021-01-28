@@ -1,4 +1,3 @@
-//const AuthService = require('../auth/auth-service');
 
 function requireWorkerAuth(req, res, next) {
   // get the value of the 'Authorization' key in req headers
@@ -11,7 +10,6 @@ function requireWorkerAuth(req, res, next) {
     bearerToken = authToken.slice(7, authToken.length);
   }
   try {
-    // 418 => I'm a teapot
     if (bearerToken !== process.env.WORKER_KEY) return res.status(404).end();
     next();
   } catch (error) {
