@@ -1,12 +1,27 @@
 const EventsService = {
+  // get events
   getEvents(db, page = 0) {
     // enable pagination. Limits results to "limit" (50) per page
     const limit = 50,
       offset = limit * page;
     return db('events').select('*').offset(offset).limit(limit);
   },
+  // get event with id
+  getEventById(db, id) {
+    return db('events').select('*').where({ id }).first();
+  },
+  // get event with title
+  getEventByTitle(db, title) {
+    return db('events').select('*').where({ title }).first();
+  },
+  // get events with category
+  getEventsByCategory(db, category) {
+    // regex pattern of category in any position in string
+    const regexPattern = `.*${category}.*`;
+    return db('events').select('*').where('categories', '~*', regexPattern);
+  },
+  // add an event
   addEvent(db, event) {
-    console.log('----------------------->   inserting event!');
     return db('events')
       .insert({
         title: event.title,
@@ -19,17 +34,10 @@ const EventsService = {
         date_published: event.date_published,
       })
       .returning('*')
+      // return added event
       .then(([addedEvent]) => addedEvent);
   },
-  deleteEvent(db, id) {
-    return db('events').where({ id }).delete();
-  },
-  getEventById(db, id) {
-    return db('events').select('*').where({ id }).first();
-  },
-  getEventByTitle(db, title) {
-    return db('events').select('*').where({ title }).first();
-  },
+  // update event (only used for category field)
   updateEventCategories(db, event_id, event) {
     return db('events')
       .update(event, (returning = true))
@@ -41,14 +49,14 @@ const EventsService = {
         return rows[0];
       });
   },
-  // TODO
-  getEventsByCategory(db, category) {
-    //  ~*
-    // `.*${category}.*`
-    const regexPattern = `.*${category}.*`;
-    // new RegExp('\\b('+words.join('|')+')\\b')
-    return db('events').select('*').where('categories', '~*', regexPattern);
+  
+  /* NOT IN USE */
+
+  // delete event
+  deleteEvent(db, id) {
+    return db('events').where({ id }).delete();
   },
+  // get events by published range
   getEventsByDateRange(db, someRange) {
     /* IMPLEMENT ME */
   },
