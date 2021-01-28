@@ -12,7 +12,6 @@ const EventsService = require('../events/events-service');
 // initialize commentsRouter
 const commentsRouter = express.Router();
 
-
 // HELPER:
 const serializeComment = (comment, eventId, userId, username) => {
   if (!eventId || !userId || !username)
@@ -25,7 +24,7 @@ const serializeComment = (comment, eventId, userId, username) => {
     user_id: Number(userId),
     event_id: Number(eventId),
     content: xss(comment.content),
-    username: xss(username)
+    username: xss(username),
   };
 };
 
@@ -55,10 +54,10 @@ commentsRouter
         req.params.eventId
       );
       // send comments
-			res.json({ comments });
+      res.json({ comments });
     } catch (e) {
       // if error, send error
-      res.status(400).json({error: e })
+      res.status(400).json({ error: e });
       next(e);
     }
   })
@@ -66,17 +65,23 @@ commentsRouter
     try {
       let { comment } = req.body;
       // serialize and sanitize comment
-      comment = serializeComment(comment, req.params.eventId, req.user.id, req.user.username);
+      comment = serializeComment(
+        comment,
+        req.params.eventId,
+        req.user.id,
+        req.user.username
+      );
 
       // if there was an issue during serializing, send response
-      if(comment.message) {
-        return res
-        .status(400)
-        .json( comment )
+      if (comment.message) {
+        return res.status(400).json(comment);
       }
 
       // create and add comment
-      const newComment = await CommentsService.addComment(req.app.get('db'), comment);
+      const newComment = await CommentsService.addComment(
+        req.app.get('db'),
+        comment
+      );
       res.status(201).json(newComment);
     } catch (e) {
       next(e);

@@ -38,7 +38,7 @@ authRouter
         return res.status(400).json({
           error: 'Incorrect username or password',
         });
-      
+
       // see if the passwords match
       const compareMatch = await AuthService.comparePasswords(
         loginUser.password,

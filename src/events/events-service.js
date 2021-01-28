@@ -22,20 +22,22 @@ const EventsService = {
   },
   // add an event
   addEvent(db, event) {
-    return db('events')
-      .insert({
-        title: event.title,
-        categories: event.categories,
-        description: event.description,
-        event_img: event.event_img,
-        source_name: event.source_name,
-        source_url: event.source_url,
-        source_img: event.source_img,
-        date_published: event.date_published,
-      })
-      .returning('*')
-      // return added event
-      .then(([addedEvent]) => addedEvent);
+    return (
+      db('events')
+        .insert({
+          title: event.title,
+          categories: event.categories,
+          description: event.description,
+          event_img: event.event_img,
+          source_name: event.source_name,
+          source_url: event.source_url,
+          source_img: event.source_img,
+          date_published: event.date_published,
+        })
+        .returning('*')
+        // return added event
+        .then(([addedEvent]) => addedEvent)
+    );
   },
   // update event (only used for category field)
   updateEventCategories(db, event_id, event) {
@@ -49,7 +51,7 @@ const EventsService = {
         return rows[0];
       });
   },
-  
+
   /* NOT IN USE */
 
   // delete event

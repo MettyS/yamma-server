@@ -32,16 +32,14 @@ class MissingKeyError extends Error {
 
 // validate that event obj has all required fields
 const validateKeys = (event) => {
-
-  expectedKeys.forEach(key => {
+  expectedKeys.forEach((key) => {
     // skips check on categories
     if (key === 'categories') return;
     // if missing an expected key, throw a MissingKeyError
-    if (!typeof(event[key]) || typeof(event[key]) === 'undefined') {
+    if (!typeof event[key] || typeof event[key] === 'undefined') {
       throw new MissingKeyError(`Invalid event. "${key}" key is missing.`);
     }
-  })
-
+  });
 };
 
 // serialize and sanitize event
@@ -109,7 +107,7 @@ eventsRouter
     try {
       const { event } = req.body;
 
-      // serializeEvent will throw a MissingKeyError handled in catch block 
+      // serializeEvent will throw a MissingKeyError handled in catch block
       // if missing an expected key. See Line 40
       const serializedEvent = serializeEvent(event);
 
@@ -134,11 +132,17 @@ eventsRouter
                 serializedEvent.title
               )
                 .then((existingEvent) => {
-                  if (!existingEvent.categories.includes(serializedEvent.categories)) {
+                  if (
+                    !existingEvent.categories.includes(
+                      serializedEvent.categories
+                    )
+                  ) {
                     // if the existing duplicate event does not contain the new event's category enter block
                     // update existing event obj with new category
                     existingEvent.categories =
-                      existingEvent.categories + ' ' + serializedEvent.categories;
+                      existingEvent.categories +
+                      ' ' +
+                      serializedEvent.categories;
                     // update the existing even in the db
                     EventsService.updateEventCategories(
                       req.app.get('db'),
@@ -152,8 +156,7 @@ eventsRouter
                         });
                       })
                       .catch((er) => next(er));
-                  } 
-                  else {
+                  } else {
                     // the existing duplicate event does contain the same categories as incoming event
                     return res.status(200).json({
                       message: 'already exists, categories updated? no',
@@ -170,11 +173,10 @@ eventsRouter
             next(mainEr);
           }
         });
-
     } catch (er) {
       // catch of main try block
       if (er instanceof MissingKeyError)
-        return res.status(400).json({ error: {message: er.message }});
+        return res.status(400).json({ error: { message: er.message } });
       next(er);
     }
   });

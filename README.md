@@ -1,4 +1,5 @@
 #Yamma
+
 ## [OpenAPI Docs](https://app.swaggerhub.com/apis/s-poveda/Yamma-API/1.0.0)
 
 ## How to set it up
@@ -51,7 +52,6 @@
     ```
 11. All the tests should pass
 
-
 ## App Structure
 
 - **ApiDocs** folder containing media related to api documentation
@@ -91,39 +91,39 @@
   - **middleware** folder contains functions that are used by the controller in multiple places
 - **test** folder contains the Test files
 
-
- ---
+  ***
 
 ### Back-end Structure - Business Objects
-* events (database table)
-    * id (auto-generated, serial)
-    * title (max 1000 chars, unique )
-    * categories (text)
-    * description (max 2000 chars)
-    * event_img (varchar)
-    * source_name (varchar)
-    * source_url (varchar, unique)
-    * date_created (now(), timestamptz)
-    * date_published (timestamptz)
-    * archived (default false)
 
-* users (database table)
-    * id (auto-generated)
-    * username (max 16 chars, min 3 chars unique, no special chars or whitespace, unique)
-    * password (max 255 chars, min 5 chars, require 1 capital, 1 special character, 1 digit)
-    * email (max 255 chars, valid email, unique)
-    * profile_img (varchar)
-    * date_created (now())
+- events (database table)
 
-* comments (database table)
-    * id (auto-generated)
-    * user_id (foreign key connected with user table)
-    * event_id (foreign key connected with events table)
-    * username (max 16 chars, username of user with user_id)
-    * content (varchar max 1000)
-    * date_created (now())
-    * archived (default false)
+  - id (auto-generated, serial)
+  - title (max 1000 chars, unique )
+  - categories (text)
+  - description (max 2000 chars)
+  - event_img (varchar)
+  - source_name (varchar)
+  - source_url (varchar, unique)
+  - date_created (now(), timestamptz)
+  - date_published (timestamptz)
+  - archived (default false)
 
+- users (database table)
 
+  - id (auto-generated)
+  - username (max 16 chars, min 3 chars unique, no special chars or whitespace, unique)
+  - password (max 255 chars, min 5 chars, require 1 capital, 1 special character, 1 digit)
+  - email (max 255 chars, valid email, unique)
+  - profile_img (varchar)
+  - date_created (now())
+
+- comments (database table)
+  - id (auto-generated)
+  - user_id (foreign key connected with user table)
+  - event_id (foreign key connected with events table)
+  - username (max 16 chars, username of user with user_id)
+  - content (varchar max 1000)
+  - date_created (now())
+  - archived (default false)
 
 ![Documentation](./ApiDocs/images/app.swaggerhub.com_.png)

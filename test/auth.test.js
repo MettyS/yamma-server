@@ -66,31 +66,35 @@ describe('authentication endpoints', function () {
     context('POST /users', () => {
       // before('remove previous users', ()=>db('users').del());
       // after('insert previous users', ()=>db('users').insert(usersToInsert));
-      usersFixture.existingUsers.forEach(user => {
+      usersFixture.existingUsers.forEach((user) => {
         const { username, email, plainPassword: password } = user;
 
         it('returns 400 if user already exists', () => {
           return supertest(app)
-          .post('/users')
-          .send({ username, email, password})
-          .set('Content-Type', 'application/json')
-          .expect(400)
-          .then(res => {
-            expect(res.body.message).to.eql(`Invalid username`);
-          });
+            .post('/users')
+            .send({ username, email, password })
+            .set('Content-Type', 'application/json')
+            .expect(400)
+            .then((res) => {
+              expect(res.body.message).to.eql(`Invalid username`);
+            });
         });
       });
 
       it('returns 201 and jwt if user added successfully', () => {
-        const { username, email, plainPassword: password } = usersFixture.newUser;
+        const {
+          username,
+          email,
+          plainPassword: password,
+        } = usersFixture.newUser;
         return supertest(app)
-        .post('/users')
-        .send({ username, email, password})
-        .set('Content-Type', 'application/json')
-        .expect(201)
-        .then(res => {
-          expect(res.body.authToken).to.exist;
-        });
+          .post('/users')
+          .send({ username, email, password })
+          .set('Content-Type', 'application/json')
+          .expect(201)
+          .then((res) => {
+            expect(res.body.authToken).to.exist;
+          });
       });
     });
   });

@@ -12,7 +12,6 @@ const AuthService = require('../auth/auth-service');
 // initialize usersRouter
 const usersRouter = express.Router();
 
-
 // HELPER:
 const serializeUser = (user) => {
   return {
@@ -62,7 +61,7 @@ usersRouter
         await UsersService.addUser(req.app.get('db'), user)
       );
       const payload = { id: addedUser.id };
-      
+
       // create and return authtoken
       return res.status(201).json({
         authToken: AuthService.createJwt(addedUser.username, payload),

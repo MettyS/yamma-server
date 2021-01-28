@@ -9,7 +9,7 @@ const CommentsService = {
     return db('comments')
       .select()
       .where({ event_id })
-      .orderBy('date_created', db.raw('asc') );
+      .orderBy('date_created', db.raw('asc'));
   },
   // get comments with user_id
   getCommentsByUser(db, user_id) {
@@ -22,7 +22,7 @@ const CommentsService = {
       .returning('*')
       .then(([addedComment]) => addedComment);
   },
-  
+
   /* NOT IN USE */
   // delete comment
   deleteComment(db, id) {

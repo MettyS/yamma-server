@@ -1,4 +1,3 @@
-
 function requireWorkerAuth(req, res, next) {
   // get the value of the 'Authorization' key in req headers
   const authToken = req.get('Authorization') || '';

@@ -25,8 +25,8 @@ const UsersService = {
   getUsers(db) {
     return db('users').select('*');
   },
-   // get user with name
-   getUsersByName(db, name) {
+  // get user with name
+  getUsersByName(db, name) {
     return db('users').select('*').where('username', name).first();
   },
   // get user with id
@@ -40,7 +40,11 @@ const UsersService = {
   // add a user
   addUser(db, user) {
     return db('users')
-      .insert({ username: user.username, password: user.password, email: user.email })
+      .insert({
+        username: user.username,
+        password: user.password,
+        email: user.email,
+      })
       .returning('*')
       .then(([addedUser]) => addedUser);
   },
@@ -49,7 +53,7 @@ const UsersService = {
   deleteUser(db, id) {
     return db('users').where({ id }).delete();
   },
- 
+
   /* validation helpers */
   // email and username input validation
   validateEmailAndUsernameSyntax(email, username) {
