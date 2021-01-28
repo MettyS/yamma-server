@@ -7,7 +7,7 @@ const commentsFixture = {
       username,
       comment: {
         content: `new comment by user ${user_id}`,
-      }
+      },
     };
   },
 };

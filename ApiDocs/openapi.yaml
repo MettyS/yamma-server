@@ -82,7 +82,6 @@ paths:
                     items:
                       $ref: '#/components/schemas/event'
 
-
       servers:
         - url: 'https://yamma-server.herokuapp.com'
     servers:

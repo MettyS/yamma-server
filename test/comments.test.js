@@ -24,7 +24,7 @@ describe('comments endpoints', function () {
   before('make knex instance', () => {
     db = knex({
       client: 'pg',
-      connection: process.env.TEST_DB_URL,
+      connection: process.env.TEST_DATABASE_URL,
     });
     app.set('db', db);
   });
@@ -44,7 +44,9 @@ describe('comments endpoints', function () {
   before('insert events', () => db('events').insert(eventsToInsert));
   before('insert comments', () => db('comments').insert(commentsToInsert));
   before('create valid jwt', () => {
-    validJwt = usersToInsert.map((u, i) => createJwt(u.username, { user_id: i+1 }));
+    validJwt = usersToInsert.map((u, i) =>
+      createJwt(u.username, { user_id: i + 1 })
+    );
   });
 
   after('remove all previous data', async () => {
@@ -93,15 +95,27 @@ describe('comments endpoints', function () {
           it('returns 201 if valid credentials', async () => {
             const jwt = validJwt[Math.floor(Math.random() * validJwt.length)];
             //sub is the username
-            const { user_id, sub}  = JSON.parse(Buffer.from(jwt.split('.')[1], 'base64').toString('utf8'));
-            const newComment = commentsFixture.newComment(user_id, event_id, sub);
+            const { user_id, sub } = JSON.parse(
+              Buffer.from(jwt.split('.')[1], 'base64').toString('utf8')
+            );
+            const newComment = commentsFixture.newComment(
+              user_id,
+              event_id,
+              sub
+            );
             const { body } = await supertest(app)
               .post(`/comments/events/${event_id}`)
               .send(newComment)
               .set('Authorization', `Bearer ${jwt}`)
               .expect(201);
-            const dbData = await db('comments').select().where({ id: body.id }).first();
-            expect(dbData).to.eql({ ...body, date_created: new Date(body.date_created) });
+            const dbData = await db('comments')
+              .select()
+              .where({ id: body.id })
+              .first();
+            expect(dbData).to.eql({
+              ...body,
+              date_created: new Date(body.date_created),
+            });
           });
         });
       });
