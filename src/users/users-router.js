@@ -51,9 +51,8 @@ usersRouter
       const addedUser = serializeUser(
         await UsersService.addUser(req.app.get('db'), user)
       );
-      const payload = {
-        user_id: addedUser.user_id,
-      };
+      const payload = { id: addedUser.id };
+      
       return res.status(201).json({
         authToken: AuthService.createJwt(addedUser.username, payload),
       });
