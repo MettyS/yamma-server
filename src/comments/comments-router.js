@@ -1,14 +1,20 @@
 const express = require('express');
+
+// middleware
 const xss = require('xss');
 const { requireAuth } = require('../middleware/jwt-auth');
-const CommentsService = require('./comments-service');
-const EventsService = require('../events/events-service');
-const commentsRouter = express.Router();
 const jsonParser = express.json();
 
+// Service objects
+const CommentsService = require('./comments-service');
+const EventsService = require('../events/events-service');
+
+// initialize commentsRouter
+const commentsRouter = express.Router();
+
 // HELPER:
-const serializeComment = (comment, eventId, userId) => {
-  if (!eventId || !userId)
+const serializeComment = (comment, eventId, userId, username) => {
+  if (!eventId || !userId || !username)
     return { message: 'An event ID and user ID must be provided' };
   if (!comment || !Object.keys(comment).length)
     return { message: 'A not empty comment object must be provided' };
@@ -18,15 +24,18 @@ const serializeComment = (comment, eventId, userId) => {
     user_id: Number(userId),
     event_id: Number(eventId),
     content: xss(comment.content),
+    username: xss(username),
   };
 };
 
-// NOTE: having a "/comments/" route isn't useful ATM. All comments are linked to a specific event
-//				Client should fetch comments after fetching events
+/* commentsRouter */
+
+// ROUTE /comments/events/:eventId
 commentsRouter
   .route('/events/:eventId')
   .all((req, res, next) => {
     const { eventId } = req.params;
+    // check if event with id exists
     EventsService.getEventById(req.app.get('db'), eventId)
       .then((event) => {
         if (!event)
@@ -39,39 +48,52 @@ commentsRouter
   // TODO: implement query usage to enable pagination with service
   .get(async (req, res, next) => {
     try {
+      // get comments with eventId
       const comments = await CommentsService.getCommentsByEventId(
         req.app.get('db'),
         req.params.eventId
       );
-      res.status(200).json({ comments });
+      // send comments
+      res.json({ comments });
     } catch (e) {
-      res.status(400).json({error: e })
+      // if error, send error
+      res.status(400).json({ error: e });
       next(e);
     }
   })
   .post(requireAuth, jsonParser, async (req, res, next) => {
     try {
       let { comment } = req.body;
-      comment = serializeComment(comment, req.params.eventId, req.user.id);
+      // serialize and sanitize comment
+      comment = serializeComment(
+        comment,
+        req.params.eventId,
+        req.user.id,
+        req.user.username
+      );
 
-      if(comment.message) {
-        return res
-        .status(400)
-        .json( comment )
+      // if there was an issue during serializing, send response
+      if (comment.message) {
+        return res.status(400).json(comment);
       }
 
-      await CommentsService.addComment(req.app.get('db'), comment);
-      res.status(201).json({});
+      // create and add comment
+      const newComment = await CommentsService.addComment(
+        req.app.get('db'),
+        comment
+      );
+      res.status(201).json(newComment);
     } catch (e) {
       next(e);
     }
   });
 
-// TODO /comments/:comment_id
+// ROUTE /comments/id/:comment_id
 commentsRouter
   .route('/id/:commentId')
   .all((req, res, next) => {
     const { comment_id } = req.params;
+    // get comment with id
     CommentsService.getCommentById(req.app.get('db'), comment_id)
       .then((commentWithId) => {
         if (!commentWithId)

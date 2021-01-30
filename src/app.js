@@ -1,4 +1,7 @@
 require('dotenv').config();
+const fs = require('fs');
+const yaml = require('yaml');
+const swaggerUiExpress = require('swagger-ui-express');
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
@@ -27,6 +30,14 @@ app.use(cors());
 app.use(helmet());
 
 app.use(express.static('public'));
+
+//SERVE API DOCUMENTATION
+const documentation = fs.readFileSync('./ApiDocs/openapi.yaml', 'utf8');
+app.use(
+  '/docs',
+  swaggerUiExpress.serve,
+  swaggerUiExpress.setup(yaml.parse(documentation))
+);
 
 // ROUTERS
 app.use('/auth', authRouter);

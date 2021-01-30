@@ -1,0 +1,245 @@
+openapi: 3.0.1
+info:
+  title: Yamma Public API
+  description: The Yamma API provides its clients with a compilation of up-to-date news events in the U.S.
+  version: 1.0.0
+servers:
+  - url: 'https://yamma-server.herokuapp.com'
+paths:
+  /auth/login:
+    post:
+      description: Acquire token to access authorized-only routes by submitting credentials.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                username:
+                  type: string
+            examples:
+              '0':
+                value: |-
+                  {
+                      "username": "TheLegend27",
+                      "password": "P4$$w0rd"
+                  }
+      responses:
+        '201':
+          description: Returns object with authorization token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/authTokenObj'
+      servers:
+        - url: 'https://yamma-server.herokuapp.com'
+    servers:
+      - url: 'https://yamma-server.herokuapp.com'
+  /users:
+    post:
+      description: Sign up as a new user.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/signUpObj'
+      responses:
+        '201':
+          description: Returns auth token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/authTokenObj'
+  /events:
+    parameters:
+      - in: query
+        name: page
+        description: Select page of events. Pages being at 0.
+        required: false
+        schema:
+          type: integer
+          example: 2
+      - in: query
+        name: category
+        required: false
+        schema:
+          type: string
+          example: US
+    get:
+      description: Get paginated events filtered by category.
+      responses:
+        '200':
+          description: Get an array of event objects.
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  events:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/event'
+
+      servers:
+        - url: 'https://yamma-server.herokuapp.com'
+    servers:
+      - url: 'https://yamma-server.herokuapp.com'
+  /events/{eventId}:
+    parameters:
+      - in: path
+        name: eventId
+        description: ID of event
+        required: true
+        schema:
+          type: integer
+          example: 34
+    get:
+      description: Get one event by ID.
+      responses:
+        '200':
+          description: Returns an event object.
+          content:
+            application/json; charset=utf-8:
+              schema:
+                $ref: '#/components/schemas/event'
+      servers:
+        - url: 'https://yamma-server.herokuapp.com'
+    servers:
+      - url: 'https://yamma-server.herokuapp.com'
+  /comments/events/{eventId}:
+    parameters:
+      - in: path
+        name: eventId
+        description: ID of event
+        required: true
+        schema:
+          type: integer
+          example: 34
+    get:
+      description: Get comments for a specific event
+      responses:
+        '200':
+          description: Returns array of comment objects
+          content:
+            application/json; charset=utf-8:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    $ref: '#/components/schemas/commentRes'
+      servers:
+        - url: 'https://yamma-server.herokuapp.com'
+    post:
+      security:
+        - jwtBearer: []
+      description: Create a new comment on a specific event
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment:
+                  $ref: '#/components/schemas/commentSubmission'
+      responses:
+        '201':
+          description: Returns an empty object
+          content:
+            application/json:
+              schema:
+                type: object
+      servers:
+        - url: 'https://yamma-server.herokuapp.com'
+    servers:
+      - url: 'https://yamma-server.herokuapp.com'
+components:
+  schemas:
+    authTokenObj:
+      type: object
+      properties:
+        authToken:
+          type: string
+          example: JJJJJ.WWWWWW.TTTTTT
+    event:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        title:
+          type: string
+          example: McCarthy Rejects Calls to Oust Cheney from House Leadership
+        categories:
+          type: string
+          example: Technology
+        description:
+          type: string
+          example: Cheney became the highest-ranking caucus member to vote for the impeachment of President Trump, after he incited a mob of his supporters to amass at the Capitol last week.
+        event_img:
+          type: string
+          example: https://event_img.com
+        source_name:
+          type: string
+          example: National Review
+        source_url:
+          type: string
+          example: https://source_url.com
+        source_img:
+          type: string
+          example: https://source_img.com
+        date_created:
+          type: string
+          example: '2021-01-15T00:00:02.292Z'
+        date_published:
+          type: string
+          example: '2021-01-14T23:01:00.000Z'
+        archived:
+          type: boolean
+          example: false
+    commentRes:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        event_id:
+          type: integer
+          example: 1
+        content:
+          type: string
+          example: sample content
+        date_created:
+          type: string
+          example: '2021-01-15T04:48:50.054Z'
+        archived:
+          type: boolean
+          example: false
+    commentSubmission:
+      type: object
+      properties:
+        content:
+          type: string
+          example: sample content
+    signUpObj:
+      type: object
+      properties:
+        username:
+          type: string
+          example: unique username
+        password:
+          type: string
+          example: P4$$word
+        email:
+          type: string
+          example: abc@mail.com
+
+  securitySchemes:
+    jwtBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
