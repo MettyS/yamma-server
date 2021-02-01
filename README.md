@@ -1,7 +1,7 @@
 # Yamma Server
 
 1. Working Prototype
-You can access a working prototype of the React app here: https://yamma-client-23jelxwls.vercel.app/ and Node app here: https://yamma-server.herokuapp.com/
+You can access a working prototype of the React app here: https://yamma-client-bcn857hee.vercel.app/ and Node app here: https://yamma-server.herokuapp.com/
 
 ## [OpenAPI Docs](https://app.swaggerhub.com/apis/s-poveda/Yamma-API/1.0.0)
 
